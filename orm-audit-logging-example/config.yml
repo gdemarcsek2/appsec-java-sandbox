@@ -1,0 +1,19 @@
+logging:
+  appenders:
+    - type: console
+      layout:
+        type: json
+server:
+  requestLog:
+    appenders:
+      - type: console
+        layout:
+          type: access-json
+database:
+  driverClass: org.h2.Driver
+  user: sa
+  password: sa
+  url: jdbc:h2:./target/example
+  properties:
+    hibernate.hbm2ddl.auto: create
+

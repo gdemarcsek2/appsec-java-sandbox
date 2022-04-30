@@ -1,0 +1,9 @@
+.vscode/
+.settings/
+target/
+.apt_generated/
+.classpath
+.factorypath
+*.log
+.project
+dependency-reduced-pom.xml
