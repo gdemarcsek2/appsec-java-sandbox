@@ -1,5 +1,4 @@
-# AppSec Java Sandbox
+# ORM Audit Logging Demo App
 
-Various sandbox projects related to application security (written in Java)
-
+Dropwizard + Hibernate audit logging in ORM layer demo
 
