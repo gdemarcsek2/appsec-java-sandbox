@@ -91,6 +91,7 @@ public class ORMAuditLoggingDemoApplication extends Application<ORMAuditLoggingD
         Info openApiInfo = new Info().title("Simple REST API example")
                                     .description("Example");
         oas.info(openApiInfo);
+
         SwaggerConfiguration oasConfig = new SwaggerConfiguration()
                                             .openAPI(oas)
                                             .prettyPrint(true)
@@ -107,6 +108,7 @@ public class ORMAuditLoggingDemoApplication extends Application<ORMAuditLoggingD
 
         environment.jersey()
                 .register(new OpenApiResource().openApiConfiguration(oasConfig));
+
         environment.jersey()
                 .register(new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<User>()
                         .setAuthenticator(new ExampleAuthenticator()).setAuthorizer(new ExampleAuthorizer())

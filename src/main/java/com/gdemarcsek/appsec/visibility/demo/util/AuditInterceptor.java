@@ -19,7 +19,7 @@ public class AuditInterceptor extends EmptyInterceptor {
 
     private void updateMDC(Object entity, WriteOperation op) {
         Integer oldWriteCount = Integer.parseInt(Optional.ofNullable(MDC.get("entityWriteCount")).orElse("0"));
-        MDC.put("entityWriteCount", String.valueOf(oldWriteCount) + 1);
+        MDC.put("entityWriteCount", String.valueOf(oldWriteCount + 1));
 
         if (oldWriteCount >= MAX_ENTITY_IDS - 1) {
             return;
