@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -35,6 +36,7 @@ public class PersonResource {
     @POST
     @UnitOfWork
     @Operation(description = "Adds a person", responses = {@ApiResponse(content = @Content(mediaType = "application/json", schema = @Schema(implementation = GetPersonDto.class)))})
+    @RolesAllowed({"ADMIN"})
     public GetPersonDto createPerson(
             @RequestBody(description = "Create Person DTO", content = @Content(schema = @Schema(implementation = CreatePersonDto.class)))
                 CreatePersonDto person

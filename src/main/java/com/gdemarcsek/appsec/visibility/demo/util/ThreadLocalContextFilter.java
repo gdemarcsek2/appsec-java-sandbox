@@ -38,7 +38,6 @@ public class ThreadLocalContextFilter implements ContainerRequestFilter {
             AppRequestContext.setCurrentUser(user);
             MDC.put("authUser", user.getId());
         }
-
     }
 
     @Override
