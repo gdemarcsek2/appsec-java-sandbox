@@ -27,7 +27,8 @@ jobs:
       run: mvn -B package --file pom.xml
     - name: Upload artifact
       uses: actions/upload-artifact@v2
-      path: target/ormauditlogging-1.0-SNAPSHOT.jar
+      with:
+        path: target/ormauditlogging-1.0-SNAPSHOT.jar
   generate-provenance:
     needs: build
     name: Generate build provenance
