@@ -3,24 +3,20 @@ package com.gdemarcsek.appsec.visibility.demo.presentation;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import lombok.Data;
 import com.gdemarcsek.appsec.visibility.demo.util.AuditAccess;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
-import com.gdemarcsek.appsec.visibility.demo.core.Sensitive;
+import lombok.Data;
+import lombok.ToString;
 
 @Data
 @AuditAccess
-public class GetPersonDto {
-      @NotNull
-      @JsonProperty("name")
-      @Schema(type = "string")
-      private Sensitive<String> fullName;
+@ToString(onlyExplicitlyIncluded = true)
+public class GetPersonDto extends ResponseDto {
+      @NotNull @JsonProperty("name")
+      private String fullName;
 
       private int yearBorn;
 
-      @NotNull
+      @NotNull @ToString.Include
       private String id;
 }

@@ -9,9 +9,14 @@ import java.util.Optional;
 
 import java.util.UUID;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import com.gdemarcsek.appsec.visibility.demo.core.Person;
 
+@Singleton
 public class PersonDAO extends AbstractDAO<Person> {
+    @Inject
     public PersonDAO(SessionFactory factory) {
         super(factory);
     }

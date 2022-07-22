@@ -12,7 +12,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
+import javax.annotation.security.DenyAll;
 import javax.annotation.security.RolesAllowed;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.validation.Valid;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -23,11 +27,13 @@ import org.modelmapper.ModelMapper;
 
 @Path("/people")
 @Produces(MediaType.APPLICATION_JSON)
+@Singleton
+@DenyAll
 public class PersonResource {
     private final PersonDAO peopleDAO;
-
     private final ModelMapper modelMapper;
 
+    @Inject
     public PersonResource(PersonDAO dao, ModelMapper mm) {
         this.peopleDAO = dao;
         this.modelMapper = mm;
@@ -37,11 +43,15 @@ public class PersonResource {
     @UnitOfWork
     @Operation(description = "Adds a person", responses = {@ApiResponse(content = @Content(mediaType = "application/json", schema = @Schema(implementation = GetPersonDto.class)))})
     @RolesAllowed({"ADMIN"})
+    @Valid
     public GetPersonDto createPerson(
             @RequestBody(description = "Create Person DTO", content = @Content(schema = @Schema(implementation = CreatePersonDto.class)))
                 CreatePersonDto person
     ) {
         Person p = this.peopleDAO.create(modelMapper.map(person, Person.class));
+        
         return modelMapper.map(p, GetPersonDto.class);
     }
+
+
 }
