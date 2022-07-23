@@ -7,7 +7,7 @@ public class SafeException extends Exception {
         super();
     }
 
-    public SafeException(@CompileTimeConstant String message) {
+    public SafeException(@CompileTimeConstant final String message) {
         super(message);
     }
 }

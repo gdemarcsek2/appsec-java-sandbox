@@ -12,13 +12,18 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
+import java.util.UUID;
+
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.Valid;
+import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
@@ -44,8 +49,9 @@ public class PersonResource {
     @Operation(description = "Adds a person", responses = {@ApiResponse(content = @Content(mediaType = "application/json", schema = @Schema(implementation = GetPersonDto.class)))})
     @RolesAllowed({"ADMIN"})
     @Valid
+    @Path("/")
     public GetPersonDto createPerson(
-            @RequestBody(description = "Create Person DTO", content = @Content(schema = @Schema(implementation = CreatePersonDto.class)))
+            @Valid @RequestBody(description = "Create Person DTO", content = @Content(schema = @Schema(implementation = CreatePersonDto.class)))
                 CreatePersonDto person
     ) {
         Person p = this.peopleDAO.create(modelMapper.map(person, Person.class));
@@ -53,5 +59,15 @@ public class PersonResource {
         return modelMapper.map(p, GetPersonDto.class);
     }
 
-
+    @Path("/{id}")
+    @UnitOfWork
+    @GET
+    @Valid
+    @RolesAllowed({"ADMIN"})
+    @Operation(description = "Gets a person", responses = {@ApiResponse(content = @Content(mediaType = "application/json", schema = @Schema(implementation = GetPersonDto.class)))})
+    public GetPersonDto getOnePerson(@PathParam("id") @Valid UUID id) {
+        Person p = this.peopleDAO.findById(id).orElseThrow(() -> new NotFoundException("No such person"));
+        
+        return modelMapper.map(p, GetPersonDto.class);
+    }
 }

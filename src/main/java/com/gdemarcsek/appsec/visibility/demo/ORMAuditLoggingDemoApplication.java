@@ -21,6 +21,8 @@ import io.dropwizard.hibernate.SessionFactoryFactory;
 import io.dropwizard.migrations.MigrationsBundle;
 import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
 import io.dropwizard.client.JerseyClientBuilder;
+import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
+import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.auth.AuthValueFactoryProvider;
 
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
@@ -65,20 +67,26 @@ public class ORMAuditLoggingDemoApplication extends Application<ORMAuditLoggingD
 
     @Override
     public void initialize(final Bootstrap<ORMAuditLoggingDemoConfiguration> bootstrap) {
+        // Add Hibernate bundle
         bootstrap.addBundle(hibernateBundle);
+        
+        // Add Migration bundle
         bootstrap.addBundle(new MigrationsBundle<ORMAuditLoggingDemoConfiguration>() {
             @Override
             public DataSourceFactory getDataSourceFactory(ORMAuditLoggingDemoConfiguration configuration) {
                 return configuration.getDataSourceFactory();
             }
         });
+
+        // Allow configuration variable interpolation from the enviornment
+        bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
+                bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
     }
 
     private static String getEnvironment() {
         String vendor = System.getProperty("java.vm.vendor");
         String vm = System.getProperty("java.vm.name");
         String version = System.getProperty("java.vm.version");
-
         return String.format("%s %s %s", vendor, vm, version);
     }
 
@@ -91,13 +99,11 @@ public class ORMAuditLoggingDemoApplication extends Application<ORMAuditLoggingD
         final DependencyInjectionBundle dependencyInjectionBundle = new DependencyInjectionBundle();
         final Client client = new JerseyClientBuilder(environment).using(configuration.getJerseyClientConfiguration())
                 .build(getName());
-        
-        
+
         log.info(String.format("Starting %s in environment %s", getClass().getName(), getEnvironment()));
         Info openApiInfo = new Info().title("Simple REST API example")
                 .description("Example");
         oas.info(openApiInfo);
-        
 
         SwaggerConfiguration oasConfig = new SwaggerConfiguration()
                 .openAPI(oas)
@@ -108,7 +114,7 @@ public class ORMAuditLoggingDemoApplication extends Application<ORMAuditLoggingD
         Converter<UUID, String> uuidToString = ctx -> ctx.getSource() == null ? null : ctx.getSource().toString();
         mm.typeMap(Person.class, GetPersonDto.class)
                 .addMappings(mapper -> mapper.using(uuidToString).map(Person::getId, GetPersonDto::setId));
-        
+
         environment.jersey()
                 .register(new OpenApiResource().openApiConfiguration(oasConfig));
 
@@ -128,9 +134,8 @@ public class ORMAuditLoggingDemoApplication extends Application<ORMAuditLoggingD
 
         environment.jersey().register(PersonResource.class);
         environment.jersey().getResourceConfig().getClasses().forEach(
-            cl -> log.info(cl.getCanonicalName())
-        );
-        
+                cl -> log.info(cl.getCanonicalName()));
+
     }
 
 }
