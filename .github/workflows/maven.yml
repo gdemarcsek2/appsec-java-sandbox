@@ -40,7 +40,7 @@ jobs:
       - name: Generate provenance
         uses: slsa-framework/github-actions-demo@v0.1
         with:
-          artifact_path: target/ormauditlogging-1.0-SNAPSHOT.jar
+          artifact_path: artifact/
 
       - name: Upload provenance
         uses: actions/upload-artifact@v2
