@@ -1,10 +1,12 @@
 package com.gdemarcsek.appsec.visibility.demo.resources;
 
 import com.gdemarcsek.appsec.visibility.demo.core.Person;
+import com.gdemarcsek.appsec.visibility.demo.core.User;
 import com.gdemarcsek.appsec.visibility.demo.db.PersonDAO;
 import com.gdemarcsek.appsec.visibility.demo.presentation.CreatePersonDto;
 import com.gdemarcsek.appsec.visibility.demo.presentation.GetPersonDto;
 
+import io.dropwizard.auth.Auth;
 import io.dropwizard.hibernate.UnitOfWork;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,9 +14,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.annotation.security.DenyAll;
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -33,7 +37,7 @@ import org.modelmapper.ModelMapper;
 @Path("/people")
 @Produces(MediaType.APPLICATION_JSON)
 @Singleton
-@DenyAll
+@PermitAll
 public class PersonResource {
     private final PersonDAO peopleDAO;
     private final ModelMapper modelMapper;
@@ -63,9 +67,8 @@ public class PersonResource {
     @UnitOfWork
     @GET
     @Valid
-    @RolesAllowed({"ADMIN"})
     @Operation(description = "Gets a person", responses = {@ApiResponse(content = @Content(mediaType = "application/json", schema = @Schema(implementation = GetPersonDto.class)))})
-    public GetPersonDto getOnePerson(@PathParam("id") @Valid UUID id) {
+    public GetPersonDto getOnePerson(@PathParam("id") @Valid UUID id, @Auth Optional<User> user) {
         Person p = this.peopleDAO.findById(id).orElseThrow(() -> new NotFoundException("No such person"));
         
         return modelMapper.map(p, GetPersonDto.class);

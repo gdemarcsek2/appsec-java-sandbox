@@ -16,4 +16,6 @@ database:
   url: jdbc:h2:./target/example
   properties:
     hibernate.hbm2ddl.auto: create
+identityTrustRootUrl: https://localhost:8080/jwks.json
+
 

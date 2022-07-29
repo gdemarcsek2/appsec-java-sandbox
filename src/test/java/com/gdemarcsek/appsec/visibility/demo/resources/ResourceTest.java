@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 
-import javax.annotation.security.DenyAll;
+import javax.annotation.security.PermitAll;
 import javax.validation.Valid;
 
 import com.gdemarcsek.appsec.visibility.demo.ORMAuditLoggingDemoApplication;
@@ -31,8 +31,8 @@ public class ResourceTest {
         void testResourceClassProperties() throws Exception {
                 EXT.getEnvironment().jersey().getResourceConfig().getClasses().stream().forEach(
                                 cl -> assertThat((cl.getPackage() != ResourceTest.class.getPackage())
-                                                || (cl.getDeclaredAnnotationsByType(DenyAll.class).length == 1))
-                                                .as("class %s must not be a resource or have the DenyAll annotation",
+                                                || (cl.getDeclaredAnnotationsByType(PermitAll.class).length == 1))
+                                                .as("class %s must not be a resource or have the PermitAll annotation",
                                                                 cl.getCanonicalName())
                                                 .isTrue());
         }

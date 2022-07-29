@@ -6,6 +6,7 @@ import com.gdemarcsek.appsec.visibility.demo.db.PersonDAO;
 import com.gdemarcsek.appsec.visibility.demo.presentation.GetPersonDto;
 import com.gdemarcsek.appsec.visibility.demo.resources.*;
 import com.gdemarcsek.appsec.visibility.demo.util.*;
+import com.github.toastshaman.dropwizard.auth.jwt.JwtAuthFilter;
 
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthDynamicFeature;
@@ -26,11 +27,25 @@ import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.auth.AuthValueFactoryProvider;
 
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
+import org.jose4j.jwa.AlgorithmConstraints;
+import org.jose4j.jwa.AlgorithmConstraints.ConstraintType;
+import org.jose4j.jwk.HttpsJwks;
+import org.jose4j.jws.AlgorithmIdentifiers;
+import org.jose4j.jws.JsonWebSignature;
+import org.jose4j.jwt.consumer.JwtConsumer;
+import org.jose4j.jwt.consumer.JwtConsumerBuilder;
+import org.jose4j.jwx.JsonWebStructure;
+import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver;
+import org.jose4j.keys.resolvers.VerificationKeyResolver;
+import org.jose4j.lang.UnresolvableKeyException;
+
 import com.google.common.collect.ImmutableList;
 
 import org.modelmapper.Converter;
 import org.modelmapper.ModelMapper;
 
+import java.io.ObjectInputFilter;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,6 +53,10 @@ import java.util.stream.Stream;
 import javax.ws.rs.client.Client;
 
 import lombok.extern.slf4j.Slf4j;
+
+import java.net.URLClassLoader;
+import java.security.Key;
+import java.net.URL;
 
 @Slf4j
 public class ORMAuditLoggingDemoApplication extends Application<ORMAuditLoggingDemoConfiguration> {
@@ -57,6 +76,14 @@ public class ORMAuditLoggingDemoApplication extends Application<ORMAuditLoggingD
     };
 
     public static void main(final String[] args) throws Exception {
+        ObjectInputFilter.Config.setSerialFilter(new ObjectInputFilter() {
+            @Override
+            public Status checkInput(FilterInfo filterInfo) {
+                return Status.REJECTED;
+            }
+
+        });
+
         new ORMAuditLoggingDemoApplication().run(args);
     }
 
@@ -99,6 +126,14 @@ public class ORMAuditLoggingDemoApplication extends Application<ORMAuditLoggingD
         final DependencyInjectionBundle dependencyInjectionBundle = new DependencyInjectionBundle();
         final Client client = new JerseyClientBuilder(environment).using(configuration.getJerseyClientConfiguration())
                 .build(getName());
+        final JwtConsumer jwtConsumer = new JwtConsumerBuilder()
+                .setAllowedClockSkewInSeconds(30)
+                .setRequireExpirationTime()
+                .setRequireIssuedAt()
+                .setRequireSubject()
+                .setJweAlgorithmConstraints(new AlgorithmConstraints(ConstraintType.WHITELIST, AlgorithmIdentifiers.ECDSA_USING_P256_CURVE_AND_SHA256))
+                .setVerificationKeyResolver(new HttpsJwksVerificationKeyResolver(new HttpsJwks(configuration.getIdentituTrustRootUrl().toString())))
+                .build();
 
         log.info(String.format("Starting %s in environment %s", getClass().getName(), getEnvironment()));
         Info openApiInfo = new Info().title("Simple REST API example")
@@ -119,9 +154,14 @@ public class ORMAuditLoggingDemoApplication extends Application<ORMAuditLoggingD
                 .register(new OpenApiResource().openApiConfiguration(oasConfig));
 
         environment.jersey()
-                .register(new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<User>()
-                        .setAuthenticator(new ExampleAuthenticator()).setAuthorizer(new ExampleAuthorizer())
-                        .setRealm("SUPER SECRET STUFF").buildAuthFilter()));
+                .register(new AuthDynamicFeature(new JwtAuthFilter.Builder<User>()
+                        .setJwtConsumer(jwtConsumer)
+                        .setAuthenticator(new ExampleAuthenticator())
+                        .setAuthorizer(new ExampleAuthorizer())
+                        .setPrefix("Bearer")
+                        .setRealm("SUPER SECRET STUFF")
+                        .buildAuthFilter()));
+        
         environment.jersey().register(RolesAllowedDynamicFeature.class);
         environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
         environment.jersey().register(new ThreadLocalContextFilter());
